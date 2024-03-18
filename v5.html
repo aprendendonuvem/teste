@@ -14,6 +14,11 @@
     border: 1px solid #ccc;
     padding: 10px;
     border-radius: 5px;
+    position: relative;
+  }
+  .completed {
+    text-decoration: line-through;
+    color: #888;
   }
 </style>
 </head>
@@ -39,11 +44,12 @@
   const submitButton = document.getElementById('submitBtn');
 
   // Função para adicionar uma nota
-  function addNote(title, text) {
+  function addNote(title, text, completed = false) {
     const note = document.createElement('div');
     note.classList.add('note');
     note.innerHTML = `
-      <h3>${title}</h3>
+      <input type="checkbox" class="completedCheckbox" ${completed ? 'checked' : ''}>
+      <h3 class="${completed ? 'completed' : ''}">${title}</h3>
       <p>${text}</p>
       <button class="deleteNote">Excluir</button>
       <button class="editNote">Editar</button>
@@ -56,7 +62,7 @@
     notesContainer.innerHTML = '';
     const notes = JSON.parse(localStorage.getItem('notes')) || [];
     notes.forEach((note, index) => {
-      addNote(note.title, note.text);
+      addNote(note.title, note.text, note.completed);
     });
   }
 
@@ -76,12 +82,12 @@
       const notes = JSON.parse(localStorage.getItem('notes')) || [];
       if (index !== '') {
         // Editar nota existente
-        notes[index] = { title, text };
+        notes[index] = { title, text, completed: false };
         submitButton.innerText = 'Adicionar Nota';
         cancelEditButton.style.display = 'none';
       } else {
         // Adicionar nova nota
-        notes.push({ title, text });
+        notes.push({ title, text, completed: false });
       }
       saveNotes(notes);
       loadNotes();
@@ -105,12 +111,24 @@
       const noteElement = event.target.parentElement;
       const index = Array.from(noteElement.parentElement.children).indexOf(noteElement);
       const notes = JSON.parse(localStorage.getItem('notes')) || [];
-      const { title, text } = notes[index];
+      const { title, text, completed } = notes[index];
       document.getElementById('noteTitle').value = title;
       document.getElementById('noteText').value = text;
       document.getElementById('noteIndex').value = index;
       submitButton.innerText = 'Salvar Edição';
       cancelEditButton.style.display = 'inline-block';
+    } else if (event.target.classList.contains('completedCheckbox')) {
+      const noteElement = event.target.parentElement;
+      const titleElement = noteElement.querySelector('h3');
+      if (event.target.checked) {
+        titleElement.classList.add('completed');
+      } else {
+        titleElement.classList.remove('completed');
+      }
+      const index = Array.from(noteElement.parentElement.children).indexOf(noteElement);
+      const notes = JSON.parse(localStorage.getItem('notes')) || [];
+      notes[index].completed = event.target.checked;
+      saveNotes(notes);
     }
   });
 
