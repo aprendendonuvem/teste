@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anotações</title>
+<style>
+  /* Estilos opcionais */
+  body {
+    font-family: Arial, sans-serif;
+  }
+  .note {
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+  }
+</style>
+</head>
+<body>
+<h1>Anotações</h1>
+
+<form id="noteForm">
+  <label for="noteTitle">Título:</label><br>
+  <input type="text" id="noteTitle" name="noteTitle"><br>
+  <label for="noteText">Texto:</label><br>
+  <textarea id="noteText" name="noteText"></textarea><br><br>
+  <button type="submit">Adicionar Nota</button>
+</form>
+
+<div id="notesContainer"></div>
+
+<script>
+  const notesContainer = document.getElementById('notesContainer');
+  const noteForm = document.getElementById('noteForm');
+
+  // Função para adicionar uma nota
+  function addNote(title, text) {
+    const note = document.createElement('div');
+    note.classList.add('note');
+    note.innerHTML = `
+      <h3>${title}</h3>
+      <p>${text}</p>
+      <button class="deleteNote">Excluir</button>
+      <button class="editNote">Editar</button>
+    `;
+    notesContainer.appendChild(note);
+  }
+
+  // Função para carregar notas existentes do localStorage
+  function loadNotes() {
+    notesContainer.innerHTML = '';
+    const notes = JSON.parse(localStorage.getItem('notes')) || [];
+    notes.forEach(note => {
+      addNote(note.title, note.text);
+    });
+  }
+
+  // Função para salvar notas no localStorage
+  function saveNotes(notes) {
+    localStorage.setItem('notes', JSON.stringify(notes));
+  }
+
+  // Adicionar nota ao enviar o formulário
+  noteForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const title = document.getElementById('noteTitle').value;
+    const text = document.getElementById('noteText').value;
+    if (title && text) {
+      addNote(title, text);
+      const notes = JSON.parse(localStorage.getItem('notes')) || [];
+      notes.push({ title, text });
+      saveNotes(notes);
+      noteForm.reset();
+    } else {
+      alert('Por favor, preencha todos os campos.');
+    }
+  });
+
+  // Excluir nota
+  notesContainer.addEventListener('click', function(event) {
+    if (event.target.classList.contains('deleteNote')) {
+      const noteElement = event.target.parentElement;
+      const title = noteElement.querySelector('h3').innerText;
+      const text = noteElement.querySelector('p').innerText;
+      const notes = JSON.parse(localStorage.getItem('notes')) || [];
+      const updatedNotes = notes.filter(note => !(note.title === title && note.text === text));
+      saveNotes(updatedNotes);
+      noteElement.remove();
+    }
+  });
+
+  // Carregar notas existentes ao carregar a página
+  window.addEventListener('load', loadNotes);
+</script>
+
+</body>
+</html>

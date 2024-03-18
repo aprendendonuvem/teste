@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anotações</title>
+<style>
+  /* Estilos opcionais */
+  body {
+    font-family: Arial, sans-serif;
+  }
+  .note {
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+  }
+</style>
+</head>
+<body>
+<h1>Anotações</h1>
+
+<form id="noteForm">
+  <input type="hidden" id="noteIndex" name="noteIndex">
+  <label for="noteTitle">Título:</label><br>
+  <input type="text" id="noteTitle" name="noteTitle"><br>
+  <label for="noteText">Texto:</label><br>
+  <textarea id="noteText" name="noteText"></textarea><br><br>
+  <button type="submit" id="submitBtn">Adicionar Nota</button>
+  <button type="button" id="cancelEdit" style="display:none;">Cancelar Edição</button>
+</form>
+
+<div id="notesContainer"></div>
+
+<script>
+  const notesContainer = document.getElementById('notesContainer');
+  const noteForm = document.getElementById('noteForm');
+  const cancelEditButton = document.getElementById('cancelEdit');
+  const submitButton = document.getElementById('submitBtn');
+
+  // Função para adicionar uma nota
+  function addNote(title, text) {
+    const note = document.createElement('div');
+    note.classList.add('note');
+    note.innerHTML = `
+      <h3>${title}</h3>
+      <p>${text}</p>
+      <button class="deleteNote">Excluir</button>
+      <button class="editNote">Editar</button>
+    `;
+    notesContainer.appendChild(note);
+  }
+
+  // Função para carregar notas existentes do localStorage
+  function loadNotes() {
+    notesContainer.innerHTML = '';
+    const notes = JSON.parse(localStorage.getItem('notes')) || [];
+    notes.forEach((note, index) => {
+      addNote(note.title, note.text);
+    });
+  }
+
+  // Função para salvar notas no localStorage
+  function saveNotes(notes) {
+    localStorage.setItem('notes', JSON.stringify(notes));
+  }
+
+  // Adicionar nota ao enviar o formulário
+  noteForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const title = document.getElementById('noteTitle').value;
+    const text = document.getElementById('noteText').value;
+    const index = document.getElementById('noteIndex').value;
+
+    if (title && text) {
+      const notes = JSON.parse(localStorage.getItem('notes')) || [];
+      if (index !== '') {
+        // Editar nota existente
+        notes[index] = { title, text };
+        submitButton.innerText = 'Adicionar Nota';
+        cancelEditButton.style.display = 'none';
+      } else {
+        // Adicionar nova nota
+        notes.push({ title, text });
+      }
+      saveNotes(notes);
+      loadNotes();
+      noteForm.reset();
+      document.getElementById('noteIndex').value = '';
+    } else {
+      alert('Por favor, preencha todos os campos.');
+    }
+  });
+
+  // Excluir nota
+  notesContainer.addEventListener('click', function(event) {
+    if (event.target.classList.contains('deleteNote')) {
+      const noteElement = event.target.parentElement;
+      const index = Array.from(noteElement.parentElement.children).indexOf(noteElement);
+      const notes = JSON.parse(localStorage.getItem('notes')) || [];
+      notes.splice(index, 1);
+      saveNotes(notes);
+      loadNotes();
+    } else if (event.target.classList.contains('editNote')) {
+      const noteElement = event.target.parentElement;
+      const index = Array.from(noteElement.parentElement.children).indexOf(noteElement);
+      const notes = JSON.parse(localStorage.getItem('notes')) || [];
+      const { title, text } = notes[index];
+      document.getElementById('noteTitle').value = title;
+      document.getElementById('noteText').value = text;
+      document.getElementById('noteIndex').value = index;
+      submitButton.innerText = 'Salvar Edição';
+      cancelEditButton.style.display = 'inline-block';
+    }
+  });
+
+  // Cancelar edição
+  cancelEditButton.addEventListener('click', function() {
+    noteForm.reset();
+    cancelEditButton.style.display = 'none';
+    submitButton.innerText = 'Adicionar Nota';
+    document.getElementById('noteIndex').value = '';
+  });
+
+  // Carregar notas existentes ao carregar a página
+  window.addEventListener('load', loadNotes);
+</script>
+
+</body>
+</html>
